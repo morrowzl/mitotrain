@@ -1,0 +1,10 @@
+zarr<3
+s3fs
+"fsspec[s3]"
+dask
+numpy
+torch
+matplotlib
+fibsem_tools
+# funkelab U-Net — not on PyPI; install from source (used in Sprint 3)
+# git+https://github.com/funkelab/funlib.learn.torch.git

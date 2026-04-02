@@ -98,13 +98,13 @@ def main():
         describe_array(pub, "volumes/raw/s2", "Raw EM s2 (quarter res)")
 
         # Ground truth crop listing
-        crop_names = list_group(pub, "volumes/labels/0003", "Ground truth crops")
+        crop_names = list_group(pub, "volumes/groundtruth/0003", "Ground truth crops")
 
         # Describe each crop found
         for crop in crop_names:
             describe_array(
                 pub,
-                f"volumes/labels/0003/{crop}/labels/all",
+                f"volumes/groundtruth/0003/{crop}/labels/all",
                 f"GT crop: {crop}"
             )
 
@@ -126,8 +126,10 @@ def main():
 
         # Predictions — mito
         list_group(ds, "labels", "Labels group")
-        describe_array(ds, "labels/mito/s0", "Mito segmentation s0")
-        describe_array(ds, "labels/mito/s4", "Mito segmentation s4 (16x downsampled)")
+        describe_array(ds, "labels/mito_seg/s0", "Mito instance seg s0")
+        describe_array(ds, "labels/mito_seg/s4", "Mito instance seg s4 (16x downsampled)")
+        describe_array(ds, "labels/mito_pred/s0", "Mito binary pred s0")
+        describe_array(ds, "labels/mito_pred/s4", "Mito binary pred s4 (16x downsampled)")
 
     # ── 3. fibsem_tools access check ─────────────────────────────────────────
     print("\n[3/4] Checking fibsem_tools...")

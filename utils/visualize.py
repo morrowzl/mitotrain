@@ -16,20 +16,26 @@ def save_slice(raw, labels, path):
     """
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
-    # Take middle Z slice of channel 0
-    z_mid = raw.shape[1] // 2
-    raw_slice   = raw[0, z_mid]      # (Y, X), float32
-    label_slice = labels[0, z_mid]   # (Y, X), uint8
+    # Pick the Z slice with the most mito voxels (middle slice is often empty)
+    mito_per_z = labels[0].sum(axis=(1, 2))  # (Z,)
+    z_best = int(mito_per_z.argmax())
+    raw_slice   = raw[0, z_best]      # (Y, X), float32
+    label_slice = labels[0, z_best]   # (Y, X), uint8
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
 
     axes[0].imshow(raw_slice, cmap="gray", vmin=0, vmax=1, interpolation="nearest")
-    axes[0].set_title(f"Raw EM — z={z_mid}")
+    axes[0].set_title(f"Raw EM — z={z_best}")
     axes[0].axis("off")
 
+    # Build RGBA overlay: red channel where mask=1, alpha=0.55
+    rgba = np.zeros((*label_slice.shape, 4), dtype=np.float32)
+    rgba[..., 0] = 1.0                    # red
+    rgba[..., 3] = label_slice * 0.55    # alpha: 0 where no mito, 0.55 where mito
+
     axes[1].imshow(raw_slice, cmap="gray", vmin=0, vmax=1, interpolation="nearest")
-    axes[1].imshow(label_slice, cmap="Reds", alpha=0.5 * label_slice, interpolation="nearest")
-    axes[1].set_title(f"Mito mask overlay — z={z_mid}")
+    axes[1].imshow(rgba, interpolation="nearest")
+    axes[1].set_title(f"Mito mask overlay — z={z_best}")
     axes[1].axis("off")
 
     fig.tight_layout()

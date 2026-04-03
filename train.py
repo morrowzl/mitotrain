@@ -8,14 +8,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from data.loader import load_subvolume
+from data.loader import load_subvolume, DATASET, EM_LAYER, SEG_LAYER, ROI
 from data.sampler import sample_patches
 from model.unet import get_model
 from utils.visualize import save_slice
 
 # ── Config (hardcoded for Sprint 0; becomes a config file in Sprint 4) ────────
 
-DATASET    = "jrc_hela-2"
 PATCH_SIZE = 32
 N_PATCHES  = 8
 OUTPUT_DIR = "outputs"
@@ -23,14 +22,14 @@ OUTPUT_DIR = "outputs"
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
 print("[1/7] Loading subvolume...")
-raw    = load_subvolume(DATASET, "raw",         roi=None)
-labels = load_subvolume(DATASET, "labels/mito", roi=None)
+raw    = load_subvolume(DATASET, EM_LAYER,  roi=ROI)
+labels = load_subvolume(DATASET, SEG_LAYER, roi=ROI)
 print(f"      shape: {raw.shape}")
 
 print("[2/7] Generating binary mask...")
 mask = (labels > 0).astype(np.uint8)
 mito_voxels = int(mask.sum())
-print(f"      mito voxels: {mito_voxels} (stub)")
+print(f"      mito voxels: {mito_voxels}")
 
 print("[3/7] Sampling patches...")
 patches = sample_patches(raw, mask, patch_size=PATCH_SIZE, n_patches=N_PATCHES)
@@ -56,7 +55,7 @@ print(f"      loss: {loss.item():.4f} (stub)")
 
 print("[7/7] Saving visualization...")
 out_path = f"{OUTPUT_DIR}/slice_preview.png"
-save_slice(raw_patch, label_patch, path=out_path)
+save_slice(raw, labels, path=out_path)
 print(f"      {out_path}")
 
 print("Done.")

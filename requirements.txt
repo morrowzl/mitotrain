@@ -1,6 +1,6 @@
 zarr<3
 s3fs
-"fsspec[s3]"
+fsspec[s3]
 dask
 numpy
 torch

@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(.venv/Scripts/pip install:*)",
-      "Bash(.venv/Scripts/python explore.py)"
+      "Bash(.venv/Scripts/python explore.py)",
+      "Bash(PYTHONUTF8=1 python train.py)",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt)",
+      "Bash(PYTHONUTF8=1 .venv/Scripts/python.exe train.py)"
     ]
   }
 }

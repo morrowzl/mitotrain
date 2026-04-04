@@ -95,3 +95,26 @@ interpretation of `mito_pred`, producing what look like class ID mixtures instea
 
 **Rule:** Always run `np.unique()` on a crop of any label array before writing binarization
 logic. Do not assume the value encoding at s2 matches the documentation for s0.
+
+---
+
+## Sprint 4.1
+
+### 8. Foreground check must target the center-crop region, not the full input patch
+The sampler demanded 5% foreground in the 132³ input patch, but BCE loss is computed only
+on the center 40³ output region. A 132³ patch with 5% foreground has ~0.14% foreground in
+a random 40³ subregion — effectively all-background labels for the model.
+
+**Rule:** When input patch size ≠ output region size, always evaluate foreground fraction
+on the center crop that matches the loss region. Add `OUTPUT_SIZE` as an importable constant
+alongside `PATCH_SIZE` so the sampler and training code stay in sync.
+
+---
+
+### 9. Write summaries from actual console output, not expected output
+Sprint 4's summary document showed a fabricated decreasing loss curve (0.6931 → 0.6714 → 0.6421).
+The actual console output was flat 0.6931 throughout. The summary was generated from
+"expected" behavior rather than observed output.
+
+**Rule:** Sprint summary documents must be written from copy-pasted console output.
+Never substitute expected results for actual results.

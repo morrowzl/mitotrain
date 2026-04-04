@@ -1,6 +1,9 @@
 import warnings
 import numpy as np
 
+PATCH_SIZE  = 132
+OUTPUT_SIZE = 40
+
 
 def sample_patches(
     em_array,
@@ -56,8 +59,15 @@ def sample_patches(
             )
 
             seg_crop = seg_array[roi]
-            label = (seg_crop > 0).astype(np.uint8)
-            fg_frac = float(label.mean())
+            label    = (seg_crop > 0).astype(np.uint8)
+
+            # Evaluate fg only in the center OUTPUT_SIZE³ region (matches BCE loss region)
+            start  = (PATCH_SIZE - OUTPUT_SIZE) // 2   # = 46
+            center = label[start:start+OUTPUT_SIZE,
+                           start:start+OUTPUT_SIZE,
+                           start:start+OUTPUT_SIZE]
+            fg_frac = float(center.mean())
+            print(f"    fg in center crop: {fg_frac:.4f}")
 
             if fg_frac >= min_fg_frac:
                 accepted = True

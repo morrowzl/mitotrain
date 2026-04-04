@@ -7,4 +7,4 @@ torch
 matplotlib
 fibsem_tools
 # funkelab U-Net — not on PyPI; install from source (used in Sprint 3)
-# git+https://github.com/funkelab/funlib.learn.torch.git
+funlib.learn.torch @ git+https://github.com/funkelab/funlib.learn.torch.git@228e15f

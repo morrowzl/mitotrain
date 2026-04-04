@@ -47,7 +47,7 @@ def log_resources(label):
 N_EPOCHS       = 30
 BATCH_SIZE     = 2      # patches per gradient step
 N_PATCHES      = 16     # patches sampled per epoch
-LEARNING_RATE  = 1e-3
+LEARNING_RATE  = 1e-4
 CHECKPOINT_DIR = "checkpoints"
 OUTPUT_DIR     = "outputs"
 
@@ -77,7 +77,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # ── Epoch loop ────────────────────────────────────────────────────────────────
 
 t_total_start = time.time()
-
+print(f"Model training mode: {model.training}")
 for epoch in range(N_EPOCHS):
     print(f"\nEpoch {epoch+1}/{N_EPOCHS}")
 
@@ -109,6 +109,7 @@ for epoch in range(N_EPOCHS):
 
         t_bwd = time.time()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
         optimizer.step()
         backward_total += time.time() - t_bwd
 

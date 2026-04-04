@@ -9,6 +9,7 @@ def get_model():
         downsample_factors=[(2, 2, 2), (2, 2, 2), (2, 2, 2)],
         kernel_size_down=[[[3, 3, 3], [3, 3, 3]]] * 4,
         kernel_size_up=[[[3, 3, 3], [3, 3, 3]]] * 3,
+        activation=None,
         num_fmaps_out=1,
         constant_upsample=True,
     )

@@ -67,7 +67,6 @@ def sample_patches(
                            start:start+OUTPUT_SIZE,
                            start:start+OUTPUT_SIZE]
             fg_frac = float(center.mean())
-            print(f"    fg in center crop: {fg_frac:.4f}")
 
             if fg_frac >= min_fg_frac:
                 accepted = True

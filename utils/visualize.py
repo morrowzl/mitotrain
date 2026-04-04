@@ -5,27 +5,28 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-def save_slice(raw, labels, path):
+def save_slice(raw, labels, path, fg_frac=None):
     """
     Save a side-by-side visualization of a raw EM slice and binary mito mask.
 
     Args:
-        raw:    np.ndarray of shape (1, Z, Y, X), float32 in [0, 1]
-        labels: np.ndarray of shape (1, Z, Y, X), uint8 binary mask
-        path:   str — output file path
+        raw:     np.ndarray of shape (1, Z, Y, X), float32 in [0, 1]
+        labels:  np.ndarray of shape (1, Z, Y, X), uint8 binary mask
+        path:    str — output file path
+        fg_frac: float or None — foreground fraction, shown in title if provided
     """
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
-    # Pick the Z slice with the most mito voxels (middle slice is often empty)
-    mito_per_z = labels[0].sum(axis=(1, 2))  # (Z,)
-    z_best = int(mito_per_z.argmax())
-    raw_slice   = raw[0, z_best]      # (Y, X), float32
-    label_slice = labels[0, z_best]   # (Y, X), uint8
+    z_mid = raw.shape[1] // 2
+    raw_slice   = raw[0, z_mid]      # (Y, X), float32
+    label_slice = labels[0, z_mid]   # (Y, X), uint8
+
+    suffix = f" — fg={fg_frac:.1%}" if fg_frac is not None else ""
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
 
     axes[0].imshow(raw_slice, cmap="gray", vmin=0, vmax=1, interpolation="nearest")
-    axes[0].set_title(f"Raw EM — z={z_best}")
+    axes[0].set_title(f"Raw EM — z={z_mid}{suffix}")
     axes[0].axis("off")
 
     # Build RGBA overlay: red channel where mask=1, alpha=0.55
@@ -35,7 +36,7 @@ def save_slice(raw, labels, path):
 
     axes[1].imshow(raw_slice, cmap="gray", vmin=0, vmax=1, interpolation="nearest")
     axes[1].imshow(rgba, interpolation="nearest")
-    axes[1].set_title(f"Mito mask overlay — z={z_best}")
+    axes[1].set_title(f"Mito mask overlay — z={z_mid}{suffix}")
     axes[1].axis("off")
 
     fig.tight_layout()

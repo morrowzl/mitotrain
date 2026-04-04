@@ -8,7 +8,9 @@
       "Bash(pip show:*)",
       "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt)",
       "Bash(PYTHONUTF8=1 .venv/Scripts/python.exe train.py)",
-      "Bash(d:/dev/repos/mitotrain/.venv/Scripts/pip list:*)"
+      "Bash(d:/dev/repos/mitotrain/.venv/Scripts/pip list:*)",
+      "Bash(where python3.14)",
+      "Read(//c/Users/morro/AppData/Local/Programs/**)"
     ]
   }
 }

@@ -4,15 +4,17 @@ import dask.array as da
 
 BUCKET    = "janelia-cosem-datasets"
 DATASET   = "jrc_hela-2"
+# .n5 suffix is required — omitting it causes PathNotFoundError (Sprint 1 bug)
+N5_PATH   = f"s3://{BUCKET}/{DATASET}/{DATASET}.n5"
 EM_LAYER  = "em/fibsem-uint16/s2"
-SEG_LAYER = "labels/mito_pred/s2"
+SEG_LAYER = "labels/mito_seg/s2"   # was: labels/mito_pred/s2 (confirmed to label extracellular space, not mito)
 
-# ROI origin derived from neuroglancer coordinates (nm ÷ 16 for s2)
-# Confirmed mitochondria-dense region from visual inspection
+# ROI origin confirmed by inspect_mito_seg.py; patch size set after U-Net shape test (Sprint 2)
+PATCH_SIZE = 132
 ROI = (
-    slice(576,  672),   # Z: 96 voxels, chunk-aligned (6×96); mito-dense, confirmed at runtime
-    slice(90,   186),   # Y: 96 voxels  (Y max is 400 at s2 — well within bounds)
-    slice(2390, 2486),  # X: 96 voxels
+    slice(480, 480 + PATCH_SIZE),   # Z: confirmed mito-dense origin
+    slice(80,  80  + PATCH_SIZE),   # Y: max is 400 at s2 — well within bounds
+    slice(2382, 2382 + PATCH_SIZE), # X
 )
 
 
@@ -30,7 +32,7 @@ def load_subvolume(dataset, layer, roi):
           - float32 in [0, 1] for uint16 EM layers (percentile-based normalization)
           - uint8 for label layers
     """
-    store = zarr.N5FSStore(f"s3://{BUCKET}/{dataset}/{dataset}.n5", anon=True)
+    store = zarr.N5FSStore(N5_PATH, anon=True)
     root = zarr.open(store, mode="r")
     zdata = root[layer]
 
@@ -46,8 +48,20 @@ def load_subvolume(dataset, layer, roi):
         raw = np.clip((raw - p_low) / (p_high - p_low), 0, 1)
         return raw[np.newaxis]  # (1, Z, Y, X)
     else:
-        # Label layer: mito_pred/s2 has values 0–N (not strictly binary).
+        # Label layer: instance IDs (47, 110, 138, …) — binarize to foreground mask.
         # Binarize: any non-zero value = mitochondria present.
         label = (crop > 0).astype(np.uint8)
         print(f"      label unique values (after binarize): {np.unique(label)}")
         return label[np.newaxis]  # (1, Z, Y, X)
+
+
+def open_arrays(dataset=DATASET):
+    """
+    Open EM and seg zarr arrays for lazy patch access. Does not load data.
+
+    Returns:
+        (em_array, seg_array): zarr arrays of shape (Z, Y, X)
+    """
+    store = zarr.N5FSStore(N5_PATH, anon=True)
+    root = zarr.open(store, mode="r")
+    return root[EM_LAYER], root[SEG_LAYER]

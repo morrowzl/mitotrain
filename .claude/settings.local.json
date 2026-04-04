@@ -10,7 +10,8 @@
       "Bash(PYTHONUTF8=1 .venv/Scripts/python.exe train.py)",
       "Bash(d:/dev/repos/mitotrain/.venv/Scripts/pip list:*)",
       "Bash(where python3.14)",
-      "Read(//c/Users/morro/AppData/Local/Programs/**)"
+      "Read(//c/Users/morro/AppData/Local/Programs/**)",
+      "Bash(.venv/Scripts/python train.py)"
     ]
   }
 }

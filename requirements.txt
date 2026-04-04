@@ -1,4 +1,5 @@
 zarr<3
+psutil
 s3fs
 fsspec[s3]
 dask

@@ -17,8 +17,8 @@ CHECKPOINT  = "checkpoints/epoch_030.pt"
 OUTPUT_PATH = "outputs/inference_preview.png"
 
 # Held-out region — never seen during training
-HOLDOUT_ROI = (slice(800, 932), slice(80, 212), slice(1200, 1332))
-THRESHOLD   = 0.5
+HOLDOUT_ROI = (slice(200, 332), slice(80, 212), slice(1500, 1632))
+THRESHOLD   = 0.30
 
 
 def center_crop(tensor, target_shape):
@@ -52,7 +52,7 @@ seg_crop  = seg_array[HOLDOUT_ROI]
 gt_binary = (seg_crop > 0).astype(np.uint8)
 
 # ── Forward pass ──────────────────────────────────────────────────────────────
-x = torch.from_numpy(raw_norm[np.newaxis, np.newaxis])  # (1, 1, 132, 132, 132)
+x = torch.from_numpy(raw_norm[np.newaxis, np.newaxis]).float()  # (1, 1, 132, 132, 132)
 print(f"[Inference] Input shape: {tuple(x.shape)}")
 
 with torch.no_grad():
@@ -72,7 +72,7 @@ raw_cropped = center_crop(raw_tensor, (40, 40, 40)).squeeze().numpy()
 # ── Visualize ─────────────────────────────────────────────────────────────────
 best_z = int(np.argmax(gt_cropped.sum(axis=(1, 2))))
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+fig, axes = plt.subplots(1, 4, figsize=(24, 6))
 
 # Panel 1: Raw EM
 axes[0].imshow(raw_cropped[best_z], cmap="gray")
@@ -95,6 +95,12 @@ axes[2].imshow(rgba_pred)
 fg_pct = 100 * pred[best_z].mean()
 axes[2].set_title(f"Prediction (thresh={THRESHOLD}) — z={best_z}\n({pred[best_z].sum()} fg voxels, {fg_pct:.1f}%)")
 axes[2].axis("off")
+
+# Panel 4 — raw probability map (contrast stretched to actual range)
+prob_slice = probs[best_z]
+axes[3].imshow(prob_slice, cmap="hot", vmin=prob_slice.min(), vmax=prob_slice.max())
+axes[3].set_title(f"Prob map (contrast stretched) — z={best_z}\nrange: {prob_slice.min():.3f}–{prob_slice.max():.3f}")
+axes[3].axis("off")
 
 plt.suptitle(f"Inference on held-out region | Checkpoint: {CHECKPOINT}", fontsize=11)
 plt.tight_layout()

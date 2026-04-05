@@ -54,7 +54,7 @@ OUTPUT_DIR     = "outputs"
 # Held-out region for Sprint 5 inference — never seen during training.
 # Training ROI: Z 480-612, Y 80-212, X 2382-2514
 # This ROI is ~320 Z-slices away and ~1200 X-voxels away.
-HOLDOUT_ROI = (slice(800, 932), slice(80, 212), slice(1200, 1332))
+HOLDOUT_ROI = (slice(200, 332), slice(80, 212), slice(1500, 1632))
 
 # ── Setup ─────────────────────────────────────────────────────────────────────
 

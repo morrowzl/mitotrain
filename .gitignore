@@ -207,6 +207,8 @@ marimo/_lsp/
 __marimo__/
 
 # mitotrain
-checkpoints/
-outputs/
+checkpoints/*
+!checkpoints/.gitkeep
+# outputs/
 !SPRINT_1_RESEARCH.md
+!train_run.log

@@ -208,3 +208,8 @@ __marimo__/
 
 # mitotrain
 checkpoints/*
+!checkpoints/.gitkeep
+outputs/*
+!outputs/.gitkeep
+docs/*
+!docs/.gitkeep

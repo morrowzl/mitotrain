@@ -44,7 +44,7 @@ The probability range (0.27–0.32) is narrow, reflecting that 240 gradient step
 93M-parameter model without GPU is insufficient for sharp discrimination. The pipeline
 is fully functional; meaningful segmentation quality requires extended training.
 
-![Inference preview](outputs/inference_preview_contrast_stretched.png)
+![Inference preview(view on branch mvp_with_artifacts)](outputs/inference_preview_contrast_stretched.png)
 
 *Four panels: raw FIB-SEM (left), ground truth mitochondria mask (green), thresholded
 prediction (red), and contrast-stretched probability map showing spatial structure learned

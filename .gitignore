@@ -208,7 +208,3 @@ __marimo__/
 
 # mitotrain
 checkpoints/*
-!checkpoints/.gitkeep
-# outputs/
-!SPRINT_1_RESEARCH.md
-!train_run.log

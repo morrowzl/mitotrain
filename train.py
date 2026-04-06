@@ -56,89 +56,95 @@ OUTPUT_DIR     = "outputs"
 # This ROI is ~320 Z-slices away and ~1200 X-voxels away.
 HOLDOUT_ROI = (slice(200, 332), slice(80, 212), slice(1500, 1632))
 
-# ── Setup ─────────────────────────────────────────────────────────────────────
 
-print("[Setup] Loading zarr handles...")
-em_array, seg_array = open_arrays()
-print(f"        shapes: {em_array.shape}")
+def main():
+    # ── Setup ─────────────────────────────────────────────────────────────────────
 
-print("[Setup] Instantiating model...")
-model = get_model()
-model.train()
-n_params = sum(p.numel() for p in model.parameters())
-print(f"        params: {n_params:,}")
+    print("[Setup] Loading zarr handles...")
+    em_array, seg_array = open_arrays()
+    print(f"        shapes: {em_array.shape}")
 
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-criterion = nn.BCEWithLogitsLoss()
-print(f"[Setup] Optimizer: Adam lr={LEARNING_RATE}")
+    print("[Setup] Instantiating model...")
+    model = get_model()
+    model.train()
+    n_params = sum(p.numel() for p in model.parameters())
+    print(f"        params: {n_params:,}")
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    criterion = nn.BCEWithLogitsLoss()
+    print(f"[Setup] Optimizer: Adam lr={LEARNING_RATE}")
 
-# ── Epoch loop ────────────────────────────────────────────────────────────────
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-t_total_start = time.time()
-print(f"Model training mode: {model.training}")
-for epoch in range(N_EPOCHS):
-    print(f"\nEpoch {epoch+1}/{N_EPOCHS}")
+    # ── Epoch loop ────────────────────────────────────────────────────────────────
 
-    t_sample = time.time()
-    print("  Sampling patches...")
-    patches = sample_patches(em_array, seg_array, patch_size=PATCH_SIZE, n_patches=N_PATCHES)
-    sample_elapsed = time.time() - t_sample
-    mean_fg = sum(p[2] for p in patches) / len(patches)
-    print(f"  n={len(patches)}, mean_fg: {mean_fg:.2f}")
+    t_total_start = time.time()
+    print(f"Model training mode: {model.training}")
+    for epoch in range(N_EPOCHS):
+        print(f"\nEpoch {epoch+1}/{N_EPOCHS}")
 
-    epoch_losses = []
-    n_batches = N_PATCHES // BATCH_SIZE
-    forward_total  = 0.0
-    backward_total = 0.0
+        t_sample = time.time()
+        print("  Sampling patches...")
+        patches = sample_patches(em_array, seg_array, patch_size=PATCH_SIZE, n_patches=N_PATCHES)
+        sample_elapsed = time.time() - t_sample
+        mean_fg = sum(p[2] for p in patches) / len(patches)
+        print(f"  n={len(patches)}, mean_fg: {mean_fg:.2f}")
 
-    for b in range(n_batches):
-        batch = patches[b * BATCH_SIZE : (b + 1) * BATCH_SIZE]
-        x = torch.stack([torch.from_numpy(p[0].astype(np.float32)) for p in batch])
-        labels = torch.stack([torch.from_numpy(p[1].astype(np.float32)) for p in batch])
+        epoch_losses = []
+        n_batches = N_PATCHES // BATCH_SIZE
+        forward_total  = 0.0
+        backward_total = 0.0
 
-        optimizer.zero_grad()
+        for b in range(n_batches):
+            batch = patches[b * BATCH_SIZE : (b + 1) * BATCH_SIZE]
+            x = torch.stack([torch.from_numpy(p[0].astype(np.float32)) for p in batch])
+            labels = torch.stack([torch.from_numpy(p[1].astype(np.float32)) for p in batch])
 
-        t_fwd = time.time()
-        out = model(x)
-        forward_total += time.time() - t_fwd
+            optimizer.zero_grad()
 
-        target = center_crop(labels, tuple(out.shape[2:]))
-        loss = criterion(out, target)
+            t_fwd = time.time()
+            out = model(x)
+            forward_total += time.time() - t_fwd
 
-        t_bwd = time.time()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
-        optimizer.step()
-        backward_total += time.time() - t_bwd
+            target = center_crop(labels, tuple(out.shape[2:]))
+            loss = criterion(out, target)
 
-        epoch_losses.append(loss.item())
-        print(f"  Batch {b+1}/{n_batches}  loss: {loss.item():.4f}")
+            t_bwd = time.time()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
+            optimizer.step()
+            backward_total += time.time() - t_bwd
 
-    epoch_mean_loss = sum(epoch_losses) / len(epoch_losses)
-    print(f"  Epoch mean loss: {epoch_mean_loss:.4f}")
-    print(f"  Timing — sample: {sample_elapsed:.1f}s  "
-          f"forward: {forward_total:.1f}s  backward: {backward_total:.1f}s")
-    log_resources(f"epoch {epoch+1}")
+            epoch_losses.append(loss.item())
+            print(f"  Batch {b+1}/{n_batches}  loss: {loss.item():.4f}")
+
+        epoch_mean_loss = sum(epoch_losses) / len(epoch_losses)
+        print(f"  Epoch mean loss: {epoch_mean_loss:.4f}")
+        print(f"  Timing — sample: {sample_elapsed:.1f}s  "
+              f"forward: {forward_total:.1f}s  backward: {backward_total:.1f}s")
+        log_resources(f"epoch {epoch+1}")
+
+        with open("outputs/loss_log.txt", "a") as f:
+            f.write(f"epoch {epoch+1}: {epoch_mean_loss:.6f}\n")
+
+    # ── Post-loop ─────────────────────────────────────────────────────────────────
+
+    total_elapsed = time.time() - t_total_start
+    print(f"\n[Timing] Total wall-clock: {total_elapsed/60:.1f} minutes")
 
     with open("outputs/loss_log.txt", "a") as f:
-        f.write(f"epoch {epoch+1}: {epoch_mean_loss:.6f}\n")
+        f.write(f"total_time_minutes: {total_elapsed/60:.1f}\n")
 
-# ── Post-loop ─────────────────────────────────────────────────────────────────
+    os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+    ckpt_path = os.path.join(CHECKPOINT_DIR, f"epoch_{N_EPOCHS:03d}.pt")
+    torch.save(model.state_dict(), ckpt_path)
+    print(f"\n[Done] Saved checkpoint: {ckpt_path}")
 
-total_elapsed = time.time() - t_total_start
-print(f"\n[Timing] Total wall-clock: {total_elapsed/60:.1f} minutes")
+    best = max(patches, key=lambda p: p[2])
+    out_path = f"{OUTPUT_DIR}/slice_preview.png"
+    save_slice(best[0], best[1], fg_frac=best[2], path=out_path)
+    print(f"[Done] Saved visualization: {out_path}")
 
-with open("outputs/loss_log.txt", "a") as f:
-    f.write(f"total_time_minutes: {total_elapsed/60:.1f}\n")
 
-os.makedirs(CHECKPOINT_DIR, exist_ok=True)
-ckpt_path = os.path.join(CHECKPOINT_DIR, f"epoch_{N_EPOCHS:03d}.pt")
-torch.save(model.state_dict(), ckpt_path)
-print(f"\n[Done] Saved checkpoint: {ckpt_path}")
-
-best = max(patches, key=lambda p: p[2])
-out_path = f"{OUTPUT_DIR}/slice_preview.png"
-save_slice(best[0], best[1], fg_frac=best[2], path=out_path)
-print(f"[Done] Saved visualization: {out_path}")
+if __name__ == "__main__":
+    main()

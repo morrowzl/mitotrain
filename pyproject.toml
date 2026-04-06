@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "mitotrain"
+version = "0.1.0"
+description = "A minimal pipeline for training a 3D U-Net to segment mitochondria in FIB-SEM electron microscopy data"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Zach Morrow", email = "morrowzl19@gmail.com" }]
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.11",
+    "numpy>=2.0",
+    "scipy>=1.17",
+    "matplotlib>=3.10",
+    "zarr>=2.18,<3",
+    "s3fs>=2026.3",
+    "fsspec>=2026.3",
+    "xarray>=2026.2",
+    "xarray-multiscale>=2.1",
+    "xarray-ome-ngff>=3.1",
+    "fibsem-tools>=7.0",
+    "cellmap-schemas>=0.8",
+    "dask>=2026.3",
+    "h5py>=3.16",
+    "pydantic>=2.12",
+    "funlib.learn.torch @ git+https://github.com/funkelab/funlib.learn.torch.git@228e15f41d755ee5c7e50cfaa26f7ed5110b55e4",
+]
+
+[project.scripts]
+train = "train:main"
+predict = "predict:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["data*", "model*", "utils*"]

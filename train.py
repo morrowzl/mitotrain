@@ -58,6 +58,19 @@ HOLDOUT_ROI = (slice(200, 332), slice(80, 212), slice(1500, 1632))
 
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device.type == "cuda":
+        gpu_name = torch.cuda.get_device_name(0)
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+        if vram_gb < 4.0:
+            print(f"[Device] WARNING: {gpu_name} has {vram_gb:.1f} GB VRAM "
+                  f"(minimum 4.0 GB required) — falling back to CPU")
+            device = torch.device("cpu")
+        else:
+            print(f"[Device] CUDA — {gpu_name} ({vram_gb:.1f} GB VRAM)")
+    if device.type == "cpu":
+        print("[Device] WARNING: training on CPU (will be slow)")
+
     # ── Setup ─────────────────────────────────────────────────────────────────────
 
     print("[Setup] Loading zarr handles...")
@@ -66,6 +79,7 @@ def main():
 
     print("[Setup] Instantiating model...")
     model = get_model()
+    model.to(device)
     model.train()
     n_params = sum(p.numel() for p in model.parameters())
     print(f"        params: {n_params:,}")
@@ -97,8 +111,8 @@ def main():
 
         for b in range(n_batches):
             batch = patches[b * BATCH_SIZE : (b + 1) * BATCH_SIZE]
-            x = torch.stack([torch.from_numpy(p[0].astype(np.float32)) for p in batch])
-            labels = torch.stack([torch.from_numpy(p[1].astype(np.float32)) for p in batch])
+            x = torch.stack([torch.from_numpy(p[0].astype(np.float32)) for p in batch]).to(device)
+            labels = torch.stack([torch.from_numpy(p[1].astype(np.float32)) for p in batch]).to(device)
 
             optimizer.zero_grad()
 

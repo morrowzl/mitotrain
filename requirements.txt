@@ -1,3 +1,7 @@
+# INSTALL ORDER (CUDA 12.1):
+# 1. pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# 2. pip install -r requirements.txt
+# 3. pip install git+https://github.com/funkelab/funlib.learn.torch.git
 aiobotocore==3.3.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.5
@@ -27,7 +31,6 @@ flexparser==0.4
 fonttools==4.62.1
 frozenlist==1.8.0
 fsspec==2026.3.0
-funlib.learn.torch @ git+https://github.com/funkelab/funlib.learn.torch.git@228e15f41d755ee5c7e50cfaa26f7ed5110b55e4
 google-crc32c==1.8.0
 h5py==3.16.0
 idna==3.11
@@ -69,11 +72,10 @@ scipy==1.17.1
 setuptools==70.2.0
 six==1.17.0
 sortedcontainers==2.4.0
-sympy==1.14.0
+sympy==1.13.1
 tblib==3.2.2
 tifffile==2026.3.3
 toolz==1.1.0
-torch==2.11.0+cpu
 tornado==6.5.5
 typing-inspection==0.4.2
 typing_extensions==4.15.0
